@@ -1,5 +1,6 @@
 package com.lweynant.rxsample;
 
+import android.graphics.Color;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
@@ -8,6 +9,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+
+import java.util.regex.Pattern;
 
 import rx.Observable;
 import rx.android.widget.OnTextChangeEvent;
@@ -41,8 +44,36 @@ public class MainActivityFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         Log.d(TAG, "onViewCreated");
         super.onViewCreated(view, savedInstanceState);
-        Observable<OnTextChangeEvent> userNameText = WidgetObservable.text(userNameEdit);
-        userNameText.filter(e -> e.text().length() > 4)
-                .subscribe( e -> Log.d("lweynant", e.text().toString()));
+        registerButton.setEnabled(false);
+        Observable<Boolean> userNameValid = WidgetObservable.text(userNameEdit)
+                .map(e -> e.text())
+                .map(t -> t.length())
+                .map(l -> l > 4);
+
+
+        final Pattern emailPattern = Pattern.compile(
+                "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
+                        + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$");
+        Observable<Boolean> emailValid = WidgetObservable.text(emailEdit)
+                                        .map(e -> e.text())
+                                        .map(t -> emailPattern.matcher(t).matches());
+
+        Observable<Boolean> registerEnabled = Observable.combineLatest(userNameValid, emailValid, (a,b) -> a && b);
+
+
+        registerEnabled.distinctUntilChanged()
+                .doOnNext(b -> Log.d("lweynant", "button " + (b? "enabled" : "disabled")))
+                .subscribe(enabled -> registerButton.setEnabled(enabled));
+
+        userNameValid.distinctUntilChanged()
+                .doOnNext(b -> Log.d("lweynant", "username " + (b? "valid" : "invalid")))
+                .map(b -> b ? Color.BLACK : Color.RED)
+                .subscribe(color -> userNameEdit.setTextColor(color));
+
+        emailValid.distinctUntilChanged()
+                .doOnNext(b -> Log.d("lweynant", "email " + (b? "valid" : "invalid")))
+                .map(b -> b ? Color.BLACK : Color.RED)
+                .subscribe(color -> emailEdit.setTextColor(color));
+
     }
 }
