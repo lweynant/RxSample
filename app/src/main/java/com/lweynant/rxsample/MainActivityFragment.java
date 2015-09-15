@@ -3,7 +3,6 @@ package com.lweynant.rxsample;
 import android.graphics.Color;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +16,7 @@ import java.util.regex.Pattern;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import rx.Observable;
+import timber.log.Timber;
 
 
 /**
@@ -24,7 +24,6 @@ import rx.Observable;
  */
 public class MainActivityFragment extends Fragment {
 
-    private static final String TAG = MainActivityFragment.class.getSimpleName();
     @Bind(R.id.edtUserName) EditText userNameEdit;
     @Bind(R.id.edtEmail) EditText emailEdit;
     @Bind(R.id.btnRegister) Button registerButton;
@@ -42,7 +41,7 @@ public class MainActivityFragment extends Fragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        Log.d(TAG, "onViewCreated");
+        Timber.d("onViewCreated");
         super.onViewCreated(view, savedInstanceState);
         registerButton.setEnabled(false);
         Observable<Boolean> userNameValid = RxTextView.textChangeEvents(userNameEdit)
@@ -62,16 +61,16 @@ public class MainActivityFragment extends Fragment {
 
 
         registerEnabled.distinctUntilChanged()
-                .doOnNext(b -> Log.d("lweynant", "button " + (b ? "enabled" : "disabled")))
+                .doOnNext(b -> Timber.d("button %s", (b ? "enabled" : "disabled")))
                 .subscribe(enabled -> registerButton.setEnabled(enabled));
 
         userNameValid.distinctUntilChanged()
-                .doOnNext(b -> Log.d("lweynant", "username " + (b ? "valid" : "invalid")))
+                .doOnNext(b -> Timber.d("username %s", (b ? "valid" : "invalid")))
                 .map(b -> b ? Color.BLACK : Color.RED)
                 .subscribe(color -> userNameEdit.setTextColor(color));
 
         emailValid.distinctUntilChanged()
-                .doOnNext(b -> Log.d("lweynant", "email " + (b ? "valid" : "invalid")))
+                .doOnNext(b -> Timber.d("email %s", (b ? "valid" : "invalid")))
                 .map(b -> b ? Color.BLACK : Color.RED)
                 .subscribe(color -> emailEdit.setTextColor(color));
 
@@ -79,6 +78,7 @@ public class MainActivityFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        Timber.d("onDestroyView");
         super.onDestroyView();
         ButterKnife.unbind(this);
     }
