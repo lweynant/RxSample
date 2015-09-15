@@ -14,6 +14,8 @@ import com.jakewharton.rxbinding.widget.RxTextView;
 
 import java.util.regex.Pattern;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
 import rx.Observable;
 
 
@@ -23,9 +25,9 @@ import rx.Observable;
 public class MainActivityFragment extends Fragment {
 
     private static final String TAG = MainActivityFragment.class.getSimpleName();
-    private EditText userNameEdit;
-    private EditText emailEdit;
-    private Button registerButton;
+    @Bind(R.id.edtUserName) EditText userNameEdit;
+    @Bind(R.id.edtEmail) EditText emailEdit;
+    @Bind(R.id.btnRegister) Button registerButton;
 
     public MainActivityFragment() {
     }
@@ -34,9 +36,7 @@ public class MainActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-        userNameEdit = (EditText)rootView.findViewById(R.id.edtUserName);
-        emailEdit = (EditText)rootView.findViewById(R.id.edtEmail);
-        registerButton = (Button) rootView.findViewById(R.id.btnRegister);
+        ButterKnife.bind(this, rootView);
         return rootView;
     }
 
@@ -75,5 +75,11 @@ public class MainActivityFragment extends Fragment {
                 .map(b -> b ? Color.BLACK : Color.RED)
                 .subscribe(color -> emailEdit.setTextColor(color));
 
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        ButterKnife.unbind(this);
     }
 }
