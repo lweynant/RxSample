@@ -17,6 +17,8 @@ import butterknife.Bind;
 import butterknife.BindString;
 import butterknife.ButterKnife;
 import rx.Observable;
+import rx.Subscription;
+import rx.subscriptions.CompositeSubscription;
 import timber.log.Timber;
 
 
@@ -25,13 +27,22 @@ import timber.log.Timber;
  */
 public class MainActivityFragment extends BaseFragment {
 
-    @Bind(R.id.edtUserName) EditText userNameEdit;
-    @Bind(R.id.edtUserNameLayout) TextInputLayout userNameInputLayout;
-    @BindString(R.string.invalid_user_msg) String invalidUserMsg;
-    @Bind(R.id.edtEmail) EditText emailEdit;
-    @Bind(R.id.edtEmailLayout) TextInputLayout emailInputLayout;
-    @Bind(R.id.btnRegister) Button registerButton;
-    @BindString(R.string.invalid_email_msg) String invalidEmailMsg;
+    @Bind(R.id.edtUserName)
+    EditText userNameEdit;
+    @Bind(R.id.edtUserNameLayout)
+    TextInputLayout userNameInputLayout;
+    @BindString(R.string.invalid_user_msg)
+    String invalidUserMsg;
+    @Bind(R.id.edtEmail)
+    EditText emailEdit;
+    @Bind(R.id.edtEmailLayout)
+    TextInputLayout emailInputLayout;
+    @Bind(R.id.btnRegister)
+    Button registerButton;
+    @BindString(R.string.invalid_email_msg)
+    String invalidEmailMsg;
+
+    private CompositeSubscription subscriptions;
 
     public MainActivityFragment() {
     }
@@ -50,6 +61,7 @@ public class MainActivityFragment extends BaseFragment {
         Timber.d("onViewCreated");
         super.onViewCreated(view, savedInstanceState);
         registerButton.setEnabled(false);
+        subscriptions = new CompositeSubscription();
         Observable<Boolean> userNameValid = RxTextView.textChangeEvents(userNameEdit).skip(1)
                 .map(e -> e.text())
                 .map(t -> t.length())
@@ -60,30 +72,31 @@ public class MainActivityFragment extends BaseFragment {
                 "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
                         + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$");
         Observable<Boolean> emailValid = RxTextView.textChangeEvents(emailEdit).skip(1)
-                                        .map(e -> e.text())
-                                        .map(t -> emailPattern.matcher(t).matches());
+                .map(e -> e.text())
+                .map(t -> emailPattern.matcher(t).matches());
 
-        Observable<Boolean> registerEnabled = Observable.combineLatest(userNameValid, emailValid, (a,b) -> a && b);
+        Observable<Boolean> registerEnabled = Observable.combineLatest(userNameValid, emailValid, (a, b) -> a && b);
 
 
-        registerEnabled.distinctUntilChanged()
+        subscriptions.add(registerEnabled.distinctUntilChanged()
                 .doOnNext(b -> Timber.d("button %s", (b ? "enabled" : "disabled")))
-                .subscribe(enabled -> registerButton.setEnabled(enabled));
+                .subscribe(enabled -> registerButton.setEnabled(enabled)));
 
-        userNameValid.distinctUntilChanged()
+        subscriptions.add(userNameValid.distinctUntilChanged()
                 .doOnNext(b -> Timber.d("username %s", (b ? "valid" : "invalid")))
-                .subscribe(isValid -> userNameInputLayout.setErrorEnabled(!isValid));
-        userNameValid.distinctUntilChanged()
+                .subscribe(isValid -> userNameInputLayout.setErrorEnabled(!isValid)));
+        subscriptions.add(userNameValid.distinctUntilChanged()
                 .filter(isValid -> !isValid)
-                .subscribe(notValid -> userNameInputLayout.setError(invalidUserMsg));
+                .subscribe(notValid -> userNameInputLayout.setError(invalidUserMsg)));
 
-        emailValid.distinctUntilChanged()
-                .doOnNext(b -> Timber.d("email %s", (b ? "valid" : "invalid")))
-                .subscribe(isValid -> emailInputLayout.setErrorEnabled(!isValid));
-
-        emailValid.distinctUntilChanged()
-                .filter(isValid -> !isValid)
-                .subscribe(notValid -> emailInputLayout.setError(invalidEmailMsg));
+        subscriptions.add(
+                emailValid.distinctUntilChanged()
+                        .doOnNext(b -> Timber.d("email %s", (b ? "valid" : "invalid")))
+                        .subscribe(isValid -> emailInputLayout.setErrorEnabled(!isValid)));
+        subscriptions.add(
+                emailValid.distinctUntilChanged()
+                        .filter(isValid -> !isValid)
+                        .subscribe(notValid -> emailInputLayout.setError(invalidEmailMsg)));
     }
 
     @Override
@@ -91,5 +104,13 @@ public class MainActivityFragment extends BaseFragment {
         Timber.d("onDestroyView");
         super.onDestroyView();
         ButterKnife.unbind(this);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (subscriptions != null) {
+            subscriptions.unsubscribe();
+        }
     }
 }
