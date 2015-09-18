@@ -5,4 +5,6 @@
 
 <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="invalid_user_msg">Invalid user name</string>
+    <string name="invalid_email_msg">Invalid email address</string>
 </resources>

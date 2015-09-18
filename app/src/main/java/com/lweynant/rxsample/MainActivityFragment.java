@@ -1,7 +1,7 @@
 package com.lweynant.rxsample;
 
 import android.graphics.Color;
-import android.support.v4.app.Fragment;
+import android.support.design.widget.TextInputLayout;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +14,7 @@ import com.jakewharton.rxbinding.widget.RxTextView;
 import java.util.regex.Pattern;
 
 import butterknife.Bind;
+import butterknife.BindString;
 import butterknife.ButterKnife;
 import rx.Observable;
 import timber.log.Timber;
@@ -25,8 +26,12 @@ import timber.log.Timber;
 public class MainActivityFragment extends BaseFragment {
 
     @Bind(R.id.edtUserName) EditText userNameEdit;
+    @Bind(R.id.edtUserNameLayout) TextInputLayout userNameInputLayout;
+    @BindString(R.string.invalid_user_msg) String invalidUserMsg;
     @Bind(R.id.edtEmail) EditText emailEdit;
+    @Bind(R.id.edtEmailLayout) TextInputLayout emailInputLayout;
     @Bind(R.id.btnRegister) Button registerButton;
+    @BindString(R.string.invalid_email_msg) String invalidEmailMsg;
 
     public MainActivityFragment() {
     }
@@ -45,7 +50,7 @@ public class MainActivityFragment extends BaseFragment {
         Timber.d("onViewCreated");
         super.onViewCreated(view, savedInstanceState);
         registerButton.setEnabled(false);
-        Observable<Boolean> userNameValid = RxTextView.textChangeEvents(userNameEdit)
+        Observable<Boolean> userNameValid = RxTextView.textChangeEvents(userNameEdit).skip(1)
                 .map(e -> e.text())
                 .map(t -> t.length())
                 .map(l -> l > 4);
@@ -54,7 +59,7 @@ public class MainActivityFragment extends BaseFragment {
         final Pattern emailPattern = Pattern.compile(
                 "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
                         + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$");
-        Observable<Boolean> emailValid = RxTextView.textChangeEvents(emailEdit)
+        Observable<Boolean> emailValid = RxTextView.textChangeEvents(emailEdit).skip(1)
                                         .map(e -> e.text())
                                         .map(t -> emailPattern.matcher(t).matches());
 
@@ -67,14 +72,18 @@ public class MainActivityFragment extends BaseFragment {
 
         userNameValid.distinctUntilChanged()
                 .doOnNext(b -> Timber.d("username %s", (b ? "valid" : "invalid")))
-                .map(b -> b ? Color.BLACK : Color.RED)
-                .subscribe(color -> userNameEdit.setTextColor(color));
+                .subscribe(isValid -> userNameInputLayout.setErrorEnabled(!isValid));
+        userNameValid.distinctUntilChanged()
+                .filter(isValid -> !isValid)
+                .subscribe(notValid -> userNameInputLayout.setError(invalidUserMsg));
 
         emailValid.distinctUntilChanged()
                 .doOnNext(b -> Timber.d("email %s", (b ? "valid" : "invalid")))
-                .map(b -> b ? Color.BLACK : Color.RED)
-                .subscribe(color -> emailEdit.setTextColor(color));
+                .subscribe(isValid -> emailInputLayout.setErrorEnabled(!isValid));
 
+        emailValid.distinctUntilChanged()
+                .filter(isValid -> !isValid)
+                .subscribe(notValid -> emailInputLayout.setError(invalidEmailMsg));
     }
 
     @Override
