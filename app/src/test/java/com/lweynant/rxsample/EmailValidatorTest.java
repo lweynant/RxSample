@@ -1,5 +1,6 @@
 package com.lweynant.rxsample;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
@@ -9,19 +10,25 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class EmailValidatorTest {
+    private EmailValidator sut;
+
+    @Before
+    public void setUp(){
+        sut = new EmailValidator();
+    }
 
     @Test
     public void emailValidator_CorrectEmailSimple_ReturnsTrue() {
-        assertThat(EmailValidator.isValidEmail("name@email.com"), is(true));
+        assertThat(sut.isValidEmail("name@email.com"), is(true));
     }
 
     @Test
     public void emailValidator_EmailMissesDomain_ReturnsFalse() {
-        assertThat(EmailValidator.isValidEmail("name@email"), not(true));
+        assertThat(sut.isValidEmail("name@email"), not(true));
     }
 
     @Test
     public void emailValidator_EmailMissesAtSymbol_ReturnFalse(){
-        assertThat(EmailValidator.isValidEmail("name.email.com"), not(true));
+        assertThat(sut.isValidEmail("name.email.com"), not(true));
     }
 }

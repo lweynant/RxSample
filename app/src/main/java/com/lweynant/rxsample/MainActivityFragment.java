@@ -41,6 +41,7 @@ public class MainActivityFragment extends BaseFragment {
     Button registerButton;
     @BindString(R.string.invalid_email_msg)
     String invalidEmailMsg;
+    EmailValidator emailValidator;
 
     private CompositeSubscription subscriptions;
 
@@ -51,6 +52,7 @@ public class MainActivityFragment extends BaseFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         Timber.d("onCreateView");
+        emailValidator = new EmailValidator();
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         ButterKnife.bind(this, rootView);
         return rootView;
@@ -70,7 +72,7 @@ public class MainActivityFragment extends BaseFragment {
 
         Observable<Boolean> emailValid = RxTextView.textChangeEvents(emailEdit).skip(1)
                 .map(e -> e.text())
-                .map(t -> EmailValidator.isValidEmail(t));
+                .map(t -> emailValidator.isValidEmail(t));
 
         Observable<Boolean> registerEnabled = Observable.combineLatest(userNameValid, emailValid, (a, b) -> a && b);
 
