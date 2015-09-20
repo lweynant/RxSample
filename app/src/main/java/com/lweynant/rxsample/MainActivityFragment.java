@@ -68,12 +68,9 @@ public class MainActivityFragment extends BaseFragment {
                 .map(l -> l > 4);
 
 
-        final Pattern emailPattern = Pattern.compile(
-                "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
-                        + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$");
         Observable<Boolean> emailValid = RxTextView.textChangeEvents(emailEdit).skip(1)
                 .map(e -> e.text())
-                .map(t -> emailPattern.matcher(t).matches());
+                .map(t -> EmailValidator.isValidEmail(t));
 
         Observable<Boolean> registerEnabled = Observable.combineLatest(userNameValid, emailValid, (a, b) -> a && b);
 
