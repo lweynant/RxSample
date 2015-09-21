@@ -5,10 +5,14 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.lweynant.rxsample.components.DaggerRegisterFragmentComponent;
+import com.lweynant.rxsample.components.RegisterFragmentComponent;
+import com.lweynant.rxsample.modules.ValidatorModule;
+
 import timber.log.Timber;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements RegisterFragment.OnFragmentInteractionListener{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,5 +44,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public RegisterFragmentComponent getComponent() {
+        RegisterFragmentComponent registerFragmentComponent = DaggerRegisterFragmentComponent.builder()
+                .validatorModule(new ValidatorModule())
+                .build();
+        return registerFragmentComponent;
     }
 }

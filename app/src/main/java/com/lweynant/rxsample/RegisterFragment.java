@@ -1,8 +1,8 @@
 package com.lweynant.rxsample;
 
-import android.graphics.Color;
-import android.support.design.widget.TextInputLayout;
+import android.app.Activity;
 import android.os.Bundle;
+import android.support.design.widget.TextInputLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,14 +10,14 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.jakewharton.rxbinding.widget.RxTextView;
+import com.lweynant.rxsample.components.RegisterFragmentComponent;
 
-import java.util.regex.Pattern;
+import javax.inject.Inject;
 
 import butterknife.Bind;
 import butterknife.BindString;
 import butterknife.ButterKnife;
 import rx.Observable;
-import rx.Subscription;
 import rx.subscriptions.CompositeSubscription;
 import timber.log.Timber;
 
@@ -25,7 +25,7 @@ import timber.log.Timber;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MainActivityFragment extends BaseFragment {
+public class RegisterFragment extends BaseFragment {
 
     @Bind(R.id.edtUserName)
     EditText userNameEdit;
@@ -41,18 +41,38 @@ public class MainActivityFragment extends BaseFragment {
     Button registerButton;
     @BindString(R.string.invalid_email_msg)
     String invalidEmailMsg;
+    @Inject
     EmailValidator emailValidator;
 
     private CompositeSubscription subscriptions;
+    private OnFragmentInteractionListener listener;
 
-    public MainActivityFragment() {
+    public RegisterFragment() {
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            listener = (OnFragmentInteractionListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+        RegisterFragmentComponent component = listener.getComponent();
+        component.inject(this);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        listener = null;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         Timber.d("onCreateView");
-        emailValidator = new EmailValidator();
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         ButterKnife.bind(this, rootView);
         return rootView;
@@ -111,5 +131,19 @@ public class MainActivityFragment extends BaseFragment {
         if (subscriptions != null) {
             subscriptions.unsubscribe();
         }
+    }
+
+    /**
+     * This interface must be implemented by activities that contain this
+     * fragment to allow an interaction in this fragment to be communicated
+     * to the activity and potentially other fragments contained in that
+     * activity.
+     * <p>
+     * See the Android Training lesson <a href=
+     * "http://developer.android.com/training/basics/fragments/communicating.html"
+     * >Communicating with Other Fragments</a> for more information.
+     */
+    public interface OnFragmentInteractionListener {
+        RegisterFragmentComponent getComponent();
     }
 }
